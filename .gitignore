@@ -1,12 +1,41 @@
+# Python
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
-.Python
-env/
+
+# Virtual Environment
 venv/
+env/
+.venv/
 ENV/
-.venv
-.vercel
+
+# Environment Variables
+.env
 .env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
 *.log
+output.txt
+
+# Build
+build.sh
+dist/
+*.egg-info/
+
+# Docker (exclude overrides but keep main compose)
+docker-compose.override.yml
+.docker/
+
+# Deployment (exclude Vercel but keep Render)
+.vercel
+vercel.json
+.vercelignore

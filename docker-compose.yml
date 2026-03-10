@@ -1,0 +1,57 @@
+services:
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: code-formatter-api
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - API_KEY=${API_KEY:-formatter-service-2c895313-6609-4132-a439-397f7f4b542d}
+      - PYTHONPATH=/app
+    volumes:
+      # Mount code for hot reload in development
+      - ./api:/app/api
+      - ./requirements.txt:/app/requirements.txt
+    command: >
+      sh -c "uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add nginx for production-like setup
+  nginx:
+    image: nginx:alpine
+    container_name: code-formatter-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+    profiles:
+      - production
+    restart: unless-stopped
+
+  # Optional: Add Redis for rate limiting/caching if needed
+  redis:
+    image: redis:alpine
+    container_name: code-formatter-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    profiles:
+      - with-redis
+    restart: unless-stopped
+
+volumes:
+  redis_data:
