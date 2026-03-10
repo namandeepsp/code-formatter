@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: code-formatter-api
+    runtime: docker
+    repo: https://github.com/namandeepsp/code-formatter
+    branch: main
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: API_KEY
+        value: formatter-service-2c895313-6609-4132-a439-397f7f4b542d
+      # Add any other env vars from your .env.prod
+    healthCheckPath: /health  # Add this endpoint to your API
+    autoDeploy: true
