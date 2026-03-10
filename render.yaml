@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: code-formatter
-    runtime: python311
-    buildCommand: apt-get update && apt-get install -y golang-go && pip install -r requirements.txt
-    startCommand: uvicorn api.main:app --host 0.0.0.0 --port 8000
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.11
