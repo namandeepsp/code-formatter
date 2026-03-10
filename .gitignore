@@ -8,5 +8,5 @@ venv/
 ENV/
 .venv
 .vercel
-.env
+.env.*
 *.log
