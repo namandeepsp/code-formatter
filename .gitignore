@@ -39,3 +39,6 @@ docker-compose.override.yml
 .vercel
 vercel.json
 .vercelignore
+
+# Java formatter JAR
+google-java-format.jar

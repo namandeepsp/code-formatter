@@ -1,14 +1,12 @@
 # Use official Python image as base
 FROM python:3.12-slim
 
-# Install Go
+# Install Go, Java, and other dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget \
-    && wget https://go.dev/dl/go1.21.5.linux-amd64.tar.gz \
-    && tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz \
-    && rm go1.21.5.linux-amd64.tar.gz \
-    && apt-get remove -y wget \
-    && apt-get autoremove -y \
+    golang-go \
+    default-jdk \
+    default-jre \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Go environment variables
@@ -31,6 +29,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
+
+# Download Google Java Format
+RUN curl -L https://github.com/google/google-java-format/releases/download/v1.17.0/google-java-format-1.17.0-all-deps.jar -o /app/google-java-format.jar
 
 # Copy project files
 COPY . .
