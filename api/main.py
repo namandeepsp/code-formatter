@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.exceptions import RequestValidationError
 from api.routes import format
 
@@ -38,6 +38,6 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(format.router)
 
 
-@app.get("/health")
+@app.get("/health", response_class=PlainTextResponse)  # ← Added response_class
 async def health_check():
-    return {"status": "healthy"}
+    return "OK"
