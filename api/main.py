@@ -6,7 +6,7 @@ from api.routes import format
 
 app = FastAPI(
     title="Code Formatter API",
-    description="Professional code formatting service for Python, Go, and their frameworks",
+    description="Professional code formatting service for Python, Go, and Java",
     version="1.0.0"
 )
 
