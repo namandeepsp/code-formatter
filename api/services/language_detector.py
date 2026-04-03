@@ -15,7 +15,7 @@ class LanguageDetector:
         "go": [
             r"\bpackage\s+\w+",
             r"\bfunc\s+\w+\s*\(",
-            r"\bimport\s+\(",
+            r"\bimport\s+",
             r":=",
             r"\bgo\s+\w+\(",
             r"\bfmt\.",

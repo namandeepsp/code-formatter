@@ -1,17 +1,33 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Any
 
 
-class FormatResponse(BaseModel):
+class FormatData(BaseModel):
     formatted_code: str
-    success: bool
-    error: Optional[str] = None
 
 
-class LanguagesResponse(BaseModel):
+class LanguagesData(BaseModel):
     languages: List[str]
 
 
-class DetectResponse(BaseModel):
+class DetectData(BaseModel):
     language: Optional[str]
     confidence: str
+
+
+class ApiResponse(BaseModel):
+    success: bool
+    error: Optional[str] = None
+    data: Optional[Any] = None
+
+
+class FormatResponse(ApiResponse):
+    data: Optional[FormatData] = None
+
+
+class LanguagesResponse(ApiResponse):
+    data: Optional[LanguagesData] = None
+
+
+class DetectResponse(ApiResponse):
+    data: Optional[DetectData] = None

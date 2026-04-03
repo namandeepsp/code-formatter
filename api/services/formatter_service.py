@@ -23,8 +23,6 @@ class FormatterService:
         return None
 
     def get_supported_languages(self) -> List[str]:
-        languages = []
-        for formatter in self._formatters:
-            if hasattr(formatter, 'SUPPORTED_LANGUAGES'):
-                languages.extend(formatter.SUPPORTED_LANGUAGES)
-        return sorted(languages)
+        """Return only base languages, not frameworks."""
+        base_languages = {"python", "go", "java"}
+        return sorted(list(base_languages))

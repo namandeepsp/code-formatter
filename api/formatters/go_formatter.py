@@ -4,7 +4,7 @@ from .base import CodeFormatter, FormatterResult
 
 
 class GoFormatter(CodeFormatter):
-    SUPPORTED_LANGUAGES = {"go", "golang"}
+    SUPPORTED_LANGUAGES = {"go"}
 
     def __init__(self):
         self.gofmt_available = shutil.which("gofmt") is not None

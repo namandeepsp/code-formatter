@@ -5,7 +5,7 @@ from .base import CodeFormatter, FormatterResult
 
 
 class PythonFormatter(CodeFormatter):
-    SUPPORTED_LANGUAGES = {"python", "django", "flask", "fastapi"}
+    SUPPORTED_LANGUAGES = {"python"}
 
     def _extract_and_move_imports(self, code: str) -> str:
         """Extract all imports and move them to the top."""
