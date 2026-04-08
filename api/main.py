@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.exceptions import RequestValidationError
 import asyncio
 import psutil
+import time
 from api.routes import format
 from api.middleware.rate_limit import rate_limiter
 
@@ -106,6 +107,4 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 app.include_router(format.router)
 
-# Store start time
-import time
 app.start_time = time.time()
