@@ -1,15 +1,19 @@
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.exceptions import RequestValidationError
+import asyncio
+import psutil
 from api.routes import format
+from api.middleware.rate_limit import rate_limiter
 
 app = FastAPI(
     title="Code Formatter API",
-    description="Professional code formatting service for Python, Go, and Java",
-    version="1.0.0"
+    description="Professional code formatting service",
+    version="2.0.0"
 )
 
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,14 +22,80 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Global rate limit middleware
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    await rate_limiter.check(request)
+    return await call_next(request)
 
+# Request size limit
+@app.middleware("http")
+async def limit_request_size(request: Request, call_next):
+    body = await request.body()
+    if len(body) > 1024 * 200:  # 200KB total limit
+        return JSONResponse(
+            status_code=413,
+            content={"success": False, "error": "Request too large (max 200KB)"}
+        )
+    return await call_next(request)
+
+# Health check with dependency verification
+@app.get("/health")
+async def health_check():
+    from api.dependencies import get_formatter_service
+    import os
+    
+    health_status = {
+        "status": "healthy",
+        "timestamp": asyncio.get_event_loop().time(),
+        "memory_usage_mb": psutil.Process().memory_info().rss / 1024 / 1024,
+        "formatters": {}
+    }
+    
+    try:
+        service = get_formatter_service()
+        languages = service.get_supported_languages()
+        health_status["formatters"]["available"] = languages
+        health_status["formatters"]["count"] = len(languages)
+        
+        # Test Python formatter
+        test_result = service.format_code("def test(): pass", "python")
+        health_status["formatters"]["python_working"] = test_result.success
+        
+    except Exception as e:
+        health_status["status"] = "degraded"
+        health_status["error"] = str(e)
+    
+    # Check memory pressure
+    if health_status["memory_usage_mb"] > 400:  # 400MB threshold
+        health_status["status"] = "warning"
+        health_status["warning"] = "High memory usage"
+    
+    status_code = 200 if health_status["status"] == "healthy" else 503
+    return JSONResponse(status_code=status_code, content=health_status)
+
+# Lightweight ping for cron jobs
+@app.get("/ping")
+async def ping():
+    return PlainTextResponse("pong")
+
+# Metrics endpoint for monitoring
+@app.get("/metrics")
+async def metrics():
+    import os
+    return {
+        "memory_mb": psutil.Process().memory_info().rss / 1024 / 1024,
+        "cpu_percent": psutil.Process().cpu_percent(),
+        "uptime_seconds": time.time() - app.start_time if hasattr(app, 'start_time') else 0
+    }
+
+# Error handlers
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"success": False, "error": "Invalid request format", "details": exc.errors()}
     )
-
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -34,10 +104,8 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"success": False, "error": "Internal server error"}
     )
 
-
 app.include_router(format.router)
 
-
-@app.get("/health", response_class=PlainTextResponse)  # ← Added response_class
-async def health_check():
-    return "OK"
+# Store start time
+import time
+app.start_time = time.time()
