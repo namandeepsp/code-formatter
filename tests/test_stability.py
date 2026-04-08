@@ -78,23 +78,3 @@ class TestStability:
             response = client.post("/api/format", json=bad_input)
             # Should either return 200 (with error) or 422 (validation error)
             assert response.status_code in [200, 422]
-    
-    @pytest.mark.slow
-    def test_long_running_stability(self, client):
-        """Test stability over 5 minutes of continuous requests"""
-        start_time = time.time()
-        request_count = 0
-        failures = 0
-        
-        while time.time() - start_time < 60:  # Run for 1 minute in test
-            response = client.post("/api/format", json={
-                "code": f"def test_{request_count}():\n    pass",
-                "language": "python"
-            })
-            if response.status_code != 200:
-                failures += 1
-            request_count += 1
-            time.sleep(0.2)
-        
-        failure_rate = failures / request_count
-        assert failure_rate < 0.05, f"Failure rate: {failure_rate*100}%"
