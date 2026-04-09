@@ -2,6 +2,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+ARG GOOGLE_JAVA_FORMAT_VERSION=1.17.0
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
@@ -18,7 +20,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY api/ ./api/
-COPY google-java-format.jar ./
+
+# Download Java formatter during image build so CI does not depend on a local JAR file.
+RUN curl -fsSL \
+    "https://github.com/google/google-java-format/releases/download/v${GOOGLE_JAVA_FORMAT_VERSION}/google-java-format-${GOOGLE_JAVA_FORMAT_VERSION}-all-deps.jar" \
+    -o ./google-java-format.jar
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
