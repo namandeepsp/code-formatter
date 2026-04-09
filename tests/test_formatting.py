@@ -96,7 +96,10 @@ class TestJavaFormatter:
         # Java may be unavailable, but should not crash
         assert "success" in data
         if data["success"]:
+            formatted = data["data"]["formatted_code"]
             assert "formatted_code" in data["data"]
+            # If formatter is available, unformatted one-line Java should be reformatted.
+            assert formatted != sample_java_code["code"]
     
     def test_format_java_large(self, client):
         """Test Java with large code"""
