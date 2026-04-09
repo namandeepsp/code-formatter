@@ -1,57 +1,31 @@
 services:
-  api:
-    build: 
+  app:
+    build:
       context: .
-      dockerfile: Dockerfile
-    container_name: code-formatter-api
+      dockerfile: dockerfile
     ports:
-      - "8000:8000"
+      - "${PORT:-8000}:8000"
     environment:
-      - ENVIRONMENT=${ENVIRONMENT:-development}
-      - API_KEY=${API_KEY:-formatter-service-2c895313-6609-4132-a439-397f7f4b542d}
-      - PYTHONPATH=/app
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - TESTING=${TESTING:-false}
+      - API_KEY=${API_KEY:-}
+      - FORMATTER_TIMEOUT=${FORMATTER_TIMEOUT:-10}
+      - FORMATTER_WORKERS=${FORMATTER_WORKERS:-2}
+      - JAVA_FORMATTER_PATH=/app/google-java-format.jar
+      - PYTHONUNBUFFERED=1
     volumes:
-      # Mount code for hot reload in development
-      - ./api:/app/api
-      - ./requirements.txt:/app/requirements.txt
-    command: >
-      sh -c "uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload"
-    restart: unless-stopped
+      - ./google-java-format.jar:/app/google-java-format.jar:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ping"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
-
-  # Optional: Add nginx for production-like setup
-  nginx:
-    image: nginx:alpine
-    container_name: code-formatter-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - api
-    profiles:
-      - production
+      start_period: 20s
     restart: unless-stopped
-
-  # Optional: Add Redis for rate limiting/caching if needed
-  redis:
-    image: redis:alpine
-    container_name: code-formatter-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    profiles:
-      - with-redis
-    restart: unless-stopped
-
-volumes:
-  redis_data:
+    mem_limit: 512m
+    cpus: '0.5'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

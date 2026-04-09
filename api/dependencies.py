@@ -7,23 +7,21 @@ def get_formatter_service() -> FormatterService:
     """Initialize formatters with proper error handling"""
     formatters = []
     
-    # Add Python (always works)
+    # Python always works
     formatters.append(PythonFormatter())
     
-    # Add Go if available
+    # Go formatter
     try:
         go_formatter = GoFormatter()
         formatters.append(go_formatter)
     except Exception as e:
         print(f"Warning: Go formatter not available: {e}")
     
-    # Add Java if available (with fallback)
+    # Java formatter with memory optimizations
     try:
         java_formatter = JavaFormatter()
-        if java_formatter._check_java():
-            formatters.append(java_formatter)
-        else:
-            print("Warning: Java formatter not available")
+        formatters.append(java_formatter)
+        print("Java formatter initialized with memory optimizations")
     except Exception as e:
         print(f"Warning: Java formatter init failed: {e}")
     

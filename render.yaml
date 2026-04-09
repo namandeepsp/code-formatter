@@ -1,16 +1,19 @@
 services:
   - type: web
     name: code-formatter
-    runtime: docker
-    repo: https://github.com/namandeepsp/code-formatter
-    plan: free  # or upgrade to starter ($7/mo) for better stability
+    env: docker
+    plan: free
+    healthCheckPath: /ping
     envVars:
       - key: ENVIRONMENT
         value: production
-      - key: API_KEY
-        sync: false  # Set in dashboard
-      - key: JAVA_OPTS
-        value: "-Xmx256m"
-    healthCheckPath: /ping
-    autoDeploy: true
-    numInstances: 1
+      - key: FORMATTER_TIMEOUT
+        value: "10"
+      - key: FORMATTER_WORKERS
+        value: "1"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: RENDER
+        value: "true"
+      - key: JAVA_TOOL_OPTIONS
+        value: "-Xmx64m -Xms16m"
