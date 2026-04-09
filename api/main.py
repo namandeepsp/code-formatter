@@ -1,12 +1,12 @@
-from fastapi import FastAPI, Request, Depends, status
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.exceptions import RequestValidationError
-import asyncio
 import psutil
 import time
 from api.routes import format
 from api.middleware.rate_limit import rate_limiter
+from fastapi import HTTPException
 
 app = FastAPI(
     title="Code Formatter API",
@@ -26,18 +26,33 @@ app.add_middleware(
 # Global rate limit middleware
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    await rate_limiter.check(request)
+    try:
+        await rate_limiter.check(request)
+    except HTTPException as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content={"success": False, "error": e.detail}
+        )
+    except Exception:
+        # Prevent crash → important for stability tests
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": "Rate limiter failure"}
+        )
+
     return await call_next(request)
 
 # Request size limit
 @app.middleware("http")
 async def limit_request_size(request: Request, call_next):
-    body = await request.body()
-    if len(body) > 1024 * 200:  # 200KB total limit
+    content_length = request.headers.get("content-length")
+
+    if content_length and int(content_length) > 1024 * 200:
         return JSONResponse(
             status_code=413,
             content={"success": False, "error": "Request too large (max 200KB)"}
         )
+
     return await call_next(request)
 
 # Health check with dependency verification
@@ -48,7 +63,7 @@ async def health_check():
     
     health_status = {
         "status": "healthy",
-        "timestamp": asyncio.get_event_loop().time(),
+        "timestamp": time.time(),
         "memory_usage_mb": psutil.Process().memory_info().rss / 1024 / 1024,
         "formatters": {}
     }
