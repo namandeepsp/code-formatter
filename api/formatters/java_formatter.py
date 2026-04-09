@@ -36,9 +36,16 @@ class JavaFormatter(CodeFormatter):
         try:
             import urllib.request
             import socket
+            from urllib.parse import urlparse
             
             socket.setdefaulttimeout(10)
             url = "https://github.com/google/google-java-format/releases/download/v1.17.0/google-java-format-1.17.0-all-deps.jar"
+            
+            # Validate URL scheme for security
+            parsed_url = urlparse(url)
+            if parsed_url.scheme not in ('http', 'https'):
+                raise ValueError(f"Invalid URL scheme: {parsed_url.scheme}")
+            
             os.makedirs(os.path.dirname(self.jar_path), exist_ok=True)
             urllib.request.urlretrieve(url, self.jar_path)
             
@@ -95,8 +102,12 @@ class JavaFormatter(CodeFormatter):
                 stdout, stderr = process.communicate(timeout=8)
                 
                 if process.returncode == 0:
-                    with open(temp_path, 'r', encoding='utf-8') as f:
-                        formatted = f.read()
+                    # google-java-format emits formatted code to stdout unless "-i" is used.
+                    # Prefer stdout, but keep file-read fallback for compatibility.
+                    formatted = stdout if stdout and stdout.strip() else None
+                    if not formatted:
+                        with open(temp_path, 'r', encoding='utf-8') as f:
+                            formatted = f.read()
                     return formatted, True, None
                 else:
                     return code, False, stderr or "Formatting failed"
@@ -115,7 +126,7 @@ class JavaFormatter(CodeFormatter):
             if temp_path and os.path.exists(temp_path):
                 try:
                     os.unlink(temp_path)
-                except:
+                except OSError:
                     pass
             
             # Aggressive garbage collection after Java formatting
@@ -123,7 +134,7 @@ class JavaFormatter(CodeFormatter):
     
     def format(self, code: str) -> FormatterResult:
         # Input validation
-        if not code or len(code.strip()) == 0:
+        if not code or not code.strip():
             return FormatterResult(code, False, "Empty code")
         
         if len(code) > self.max_code_size:

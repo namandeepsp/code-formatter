@@ -8,7 +8,7 @@ class PythonFormatter(CodeFormatter):
     SUPPORTED_LANGUAGES = {"python"}
 
     def format(self, code: str) -> FormatterResult:
-        if not code or len(code.strip()) == 0:
+        if not code or not code.strip():
             return FormatterResult(code, False, "Empty code")
 
         # ✅ Step 1: Validate syntax FIRST

@@ -12,7 +12,7 @@ class GoFormatter(CodeFormatter):
         self.max_code_size = 100 * 1024  # 100KB for Go
         
     def format(self, code: str) -> FormatterResult:
-        if not code or len(code.strip()) == 0:
+        if not code or not code.strip():
             return FormatterResult(code, False, "Empty code")
         
         if len(code) > self.max_code_size:
@@ -49,7 +49,7 @@ class GoFormatter(CodeFormatter):
             if temp_path and os.path.exists(temp_path):
                 try:
                     os.unlink(temp_path)
-                except:
+                except OSError:
                     pass
     
     def supports_language(self, language: str) -> bool:
